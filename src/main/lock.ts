@@ -7,10 +7,10 @@
 
 import * as debug_ from "debug";
 import { app } from "electron";
-import { diMainGet, getLibraryWindowFromDi } from "readium-desktop/main/di";
+import { getLibraryWindowFromDi } from "readium-desktop/main/di";
 
 import { openFileFromCli } from "./cli/commandLine";
-import { cli } from "./cli/process";
+import { cli, getStorePromiseFromProcessFile } from "./cli/process";
 
 // Logger
 const debug = debug_("readium-desktop:main:lock");
@@ -36,7 +36,7 @@ export function lockInstance() {
         });
 
         // https://github.com/electron/electron/blob/master/docs/api/app.md#event-second-instance
-        app.on("second-instance", (_e, argv, _workingDir) => {
+        app.on("second-instance", async (_e, argv, _workingDir) => {
             // Someone tried to run a second instance, we should focus our window.
             debug("comandLine", argv, _workingDir);
 
@@ -48,7 +48,7 @@ export function lockInstance() {
                 libraryAppWindow.show(); // focuses as well
             }
 
-            const store = diMainGet("store");
+            const store = await getStorePromiseFromProcessFile();
             // execute command line from second instance
             // when the command line doesn't used electron: execute and exit in second instance process
             // when the command has needed to open win electron: execute with below cli function
